@@ -1,0 +1,296 @@
+---
+// Startseite mit Kanban-Board
+// Demonstriert HTMX + Alpine.js Zusammenspiel
+
+import Base from "../layouts/Base.astro";
+import KanbanBoard from "../components/KanbanBoard.astro";
+import { getTasksByStatus, getStats } from "../lib/db";
+
+const tasks = getTasksByStatus();
+const stats = getStats();
+---
+
+<Base title="AHA Stack Demo - Kanban Board">
+    <div
+        x-data={`{
+      showDeleteModal: false,
+      deleteId: null,
+      editingId: null,
+      editText: '',
+      editDescription: '',
+      editPriority: 'medium',
+      editDueDate: '',
+      isLoading: false,
+      darkMode: localStorage.getItem('darkMode') === 'true',
+      draggedId: null,
+      dragStatus: null,
+      newPriority: 'medium',
+
+      get stats() {
+        const board = document.getElementById('kanban-board');
+        if (!board) return { total: ${stats.total}, open: ${stats.open}, inProgress: ${stats.inProgress}, done: ${stats.done} };
+        return {
+          total: parseInt(board.dataset.total) || 0,
+          open: parseInt(board.dataset.open) || 0,
+          inProgress: parseInt(board.dataset.inProgress) || 0,
+          done: parseInt(board.dataset.done) || 0
+        };
+      },
+
+      toggleDarkMode() {
+        this.darkMode = !this.darkMode;
+        localStorage.setItem('darkMode', this.darkMode);
+        document.documentElement.classList.toggle('dark', this.darkMode);
+      },
+
+      openEditModal(id, text, description, priority, dueDate) {
+        this.editingId = id;
+        this.editText = text;
+        this.editDescription = description;
+        this.editPriority = priority;
+        this.editDueDate = dueDate;
+      },
+
+      handleDragStart(event, id) {
+        this.draggedId = id;
+        this.dragStatus = event.target.closest('.kanban-column')?.dataset.status;
+        event.target.classList.add('dragging');
+        event.dataTransfer.effectAllowed = 'move';
+      },
+
+      handleDragEnd() {
+        this.draggedId = null;
+        this.dragStatus = null;
+        document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+        document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+      },
+
+      async handleDrop(event, newStatus) {
+        event.preventDefault();
+        if (!this.draggedId || this.dragStatus === newStatus) return;
+
+        this.isLoading = true;
+
+        htmx.ajax('PATCH', '/api/tasks/' + this.draggedId + '/status', {
+          target: '#kanban-board',
+          swap: 'outerHTML',
+          values: { status: newStatus }
+        });
+
+        this.handleDragEnd();
+      }
+    }`}
+        x-init="
+      document.documentElement.classList.toggle('dark', darkMode);
+      document.body.addEventListener('htmx:beforeRequest', () => isLoading = true);
+      document.body.addEventListener('htmx:afterRequest', () => {
+        isLoading = false;
+        newPriority = 'medium';
+        $nextTick(() => $dispatch('stats-updated'));
+      });
+    "
+    >
+        <!-- Header mit Dark Mode Toggle -->
+        <div class="header">
+            <h1>Kanban Board</h1>
+            <button
+                class="dark-mode-toggle"
+                @click="toggleDarkMode()"
+                :title="darkMode ? 'Light Mode' : 'Dark Mode'"
+            >
+                <span x-show="!darkMode" class="icon">🌙</span>
+                <span x-show="darkMode" class="icon">☀️</span>
+            </button>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div
+            class="loading-bar"
+            x-show="isLoading"
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+        >
+        </div>
+
+        <!-- Statistiken -->
+        <div class="stats" @stats-updated.window="$forceUpdate()">
+            <span class="stat">
+                <strong x-text="stats.total">{stats.total}</strong> Gesamt
+            </span>
+            <span class="stat open">
+                <strong x-text="stats.open">{stats.open}</strong> Offen
+            </span>
+            <span class="stat in-progress">
+                <strong x-text="stats.inProgress">{stats.inProgress}</strong> In Arbeit
+            </span>
+            <span class="stat done">
+                <strong x-text="stats.done">{stats.done}</strong> Erledigt
+            </span>
+        </div>
+
+        <!-- Neue Aufgabe Formular -->
+        <form
+            hx-post="/api/tasks"
+            hx-target="#kanban-board"
+            hx-swap="outerHTML"
+            hx-on::after-request="this.reset()"
+            class="task-form"
+        >
+            <div class="input-wrapper">
+                <input
+                    type="text"
+                    name="text"
+                    placeholder="Neue Aufgabe eingeben..."
+                    required
+                    minlength="2"
+                />
+            </div>
+
+            <!-- Priorität Auswahl als Select -->
+            <select
+                name="priority"
+                class="priority-select-input"
+                x-model="newPriority"
+            >
+                <option value="low">Niedrig</option>
+                <option value="medium" selected>Mittel</option>
+                <option value="high">Hoch</option>
+            </select>
+
+            <button type="submit" class="btn-add">
+                <span x-show="!isLoading">Hinzufügen</span>
+                <span x-show="isLoading" class="spinner"></span>
+            </button>
+        </form>
+
+        <!-- Kanban Board -->
+        <KanbanBoard tasks={tasks} stats={stats} />
+
+        <!-- Bearbeiten Modal (erweitert) -->
+        <div
+            class="modal-overlay"
+            x-show="editingId !== null"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            @click.self="editingId = null"
+            style="display: none;"
+        >
+            <div class="modal modal-large" @click.stop>
+                <h3>Aufgabe bearbeiten</h3>
+                <form
+                    :hx-put="'/api/tasks/' + editingId"
+                    hx-target="#kanban-board"
+                    hx-swap="outerHTML"
+                    @htmx:after-request="editingId = null"
+                    class="edit-form"
+                >
+                    <!-- Titel -->
+                    <div class="form-group">
+                        <label for="edit-text">Titel</label>
+                        <input
+                            type="text"
+                            id="edit-text"
+                            name="text"
+                            x-model="editText"
+                            required
+                            placeholder="Aufgabentitel..."
+                            class="form-input"
+                        />
+                    </div>
+
+                    <!-- Beschreibung -->
+                    <div class="form-group">
+                        <label for="edit-description">Beschreibung</label>
+                        <textarea
+                            id="edit-description"
+                            name="description"
+                            x-model="editDescription"
+                            rows="3"
+                            placeholder="Optionale Beschreibung..."
+                            class="form-textarea"></textarea>
+                    </div>
+
+                    <!-- Priorität und Fälligkeitsdatum -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-priority">Priorität</label>
+                            <select
+                                id="edit-priority"
+                                name="priority"
+                                x-model="editPriority"
+                                class="form-select"
+                            >
+                                <option value="low">Niedrig</option>
+                                <option value="medium">Mittel</option>
+                                <option value="high">Hoch</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit-dueDate">Fälligkeitsdatum</label>
+                            <input
+                                type="date"
+                                id="edit-dueDate"
+                                name="dueDate"
+                                x-model="editDueDate"
+                                class="form-input"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button
+                            type="button"
+                            class="btn-cancel"
+                            @click="editingId = null"
+                        >
+                            Abbrechen
+                        </button>
+                        <button type="submit" class="btn-save">
+                            Speichern
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Löschen Bestätigung Modal -->
+        <div
+            class="modal-overlay"
+            x-show="showDeleteModal"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            @click.self="showDeleteModal = false"
+            style="display: none;"
+        >
+            <div class="modal" @click.stop>
+                <h3>Aufgabe löschen?</h3>
+                <p>Diese Aktion kann nicht rückgängig gemacht werden.</p>
+                <div class="modal-actions">
+                    <button class="btn-cancel" @click="showDeleteModal = false">
+                        Abbrechen
+                    </button>
+                    <button
+                        class="btn-delete"
+                        :hx-delete="'/api/tasks/' + deleteId"
+                        hx-target="#kanban-board"
+                        hx-swap="outerHTML"
+                        @click="showDeleteModal = false"
+                        hx-trigger="click"
+                    >
+                        Löschen
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</Base>

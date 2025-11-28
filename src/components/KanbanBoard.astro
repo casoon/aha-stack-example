@@ -1,0 +1,97 @@
+---
+// Kanban Board Komponente
+// Zeigt Aufgaben in drei Spalten: Offen, In Bearbeitung, Erledigt
+
+import type { Task, TaskStatus } from '../lib/db';
+import { getPriorityLabel, getPriorityColor } from '../lib/db';
+
+interface Props {
+  tasks: Record<TaskStatus, Task[]>;
+  stats: { total: number; open: number; inProgress: number; done: number };
+}
+
+const { tasks, stats } = Astro.props;
+
+const columns = [
+  { id: 'open', title: 'Offen', icon: '📋', color: '#ed8936', tasks: tasks.open },
+  { id: 'in_progress', title: 'In Bearbeitung', icon: '🔄', color: '#4299e1', tasks: tasks.in_progress },
+  { id: 'done', title: 'Erledigt', icon: '✅', color: '#48bb78', tasks: tasks.done }
+] as const;
+---
+
+<div
+  id="kanban-board"
+  class="kanban-board"
+  data-total={stats.total}
+  data-open={stats.open}
+  data-in-progress={stats.inProgress}
+  data-done={stats.done}
+>
+  {columns.map((column) => (
+    <div
+      class="kanban-column"
+      data-status={column.id}
+      x-on:dragover.prevent="dragOver = true"
+      x-on:dragleave="dragOver = false"
+      x-on:drop="handleDrop($event, $el.dataset.status)"
+      :class="{ 'drag-over': dragOver && dragStatus !== $el.dataset.status }"
+      x-data="{ dragOver: false }"
+    >
+      <div class="column-header" style={`border-color: ${column.color}`}>
+        <span class="column-icon">{column.icon}</span>
+        <h3>{column.title}</h3>
+        <span class="column-count" style={`background: ${column.color}`}>
+          {column.tasks.length}
+        </span>
+      </div>
+
+      <div class="column-tasks">
+        {column.tasks.length === 0 ? (
+          <div class="empty-column">Keine Aufgaben</div>
+        ) : (
+          column.tasks.map((task) => (
+            <div
+              class="kanban-task"
+              draggable="true"
+              data-id={task.id}
+              x-on:dragstart="handleDragStart($event, $el.dataset.id)"
+              x-on:dragend="handleDragEnd()"
+            >
+              <div class="task-header">
+                <span
+                  class="priority-badge"
+                  style={`background: ${getPriorityColor(task.priority)}`}
+                >
+                  {getPriorityLabel(task.priority)}
+                </span>
+                {task.dueDate && (
+                  <span class="due-date">📅 {task.dueDate}</span>
+                )}
+              </div>
+              <span class="task-text">{task.text}</span>
+              {task.description && (
+                <p class="task-description">{task.description}</p>
+              )}
+              <div class="task-actions">
+                <button
+                  class="task-edit-btn"
+                  x-on:click={`openEditModal(${task.id}, '${task.text.replace(/'/g, "\\'")}', '${task.description.replace(/'/g, "\\'")}', '${task.priority}', '${task.dueDate || ''}')`}
+                  title="Bearbeiten"
+                >
+                  ✏️
+                </button>
+                <button
+                  class="task-delete-btn"
+                  x-on:click={`deleteId = ${task.id}; showDeleteModal = true`}
+                  title="Löschen"
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  ))}
+</div>

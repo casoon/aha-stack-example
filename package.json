@@ -1,0 +1,17 @@
+{
+  "name": "aha-stack-demo",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/node": "^8.3.4",
+    "astro": "^4.16.0"
+  },
+  "volta": {
+    "node": "20.18.0"
+  }
+}
