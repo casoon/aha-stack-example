@@ -19,7 +19,7 @@ export const PATCH: APIRoute = async ({ params, request }) => {
     return new Response("Aufgabe nicht gefunden", { status: 404 });
   }
 
-  return new Response(renderKanbanBoard(), {
+  return new Response(await renderKanbanBoard(), {
     status: 200,
     headers: { "Content-Type": "text/html" },
   });

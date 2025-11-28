@@ -42,7 +42,7 @@ export const PUT: APIRoute = async ({ params, request }) => {
     return new Response("Aufgabe nicht gefunden", { status: 404 });
   }
 
-  return new Response(renderKanbanBoard(), {
+  return new Response(await renderKanbanBoard(), {
     status: 200,
     headers: { "Content-Type": "text/html" },
   });
@@ -57,7 +57,7 @@ export const DELETE: APIRoute = async ({ params }) => {
     return new Response("Aufgabe nicht gefunden", { status: 404 });
   }
 
-  return new Response(renderKanbanBoard(), {
+  return new Response(await renderKanbanBoard(), {
     status: 200,
     headers: { "Content-Type": "text/html" },
   });
