@@ -116,6 +116,23 @@ const html = await container.renderToString(KanbanBoard, {
 });
 ```
 
+### Container API auf Cloudflare Workers
+
+Die Container API verwendet intern `import.meta.url` für Pfadauflösungen, was auf Cloudflare Workers nicht funktioniert. Dieses Projekt enthält einen **Post-Build Patch** in `astro.config.mjs`, der automatisch:
+
+1. `hrefRoot: import.meta.url` durch die Site-URL ersetzt
+2. Alle `file:///`-Pfade durch die Site-URL ersetzt
+
+Zusätzlich ist in `wrangler.toml` das `nodejs_compat` Flag aktiviert, das mit Compatibility Date `2025-09-01+` automatisch `node:fs` und andere Node.js-Module unterstützt.
+
+```toml
+# wrangler.toml
+compatibility_date = "2025-11-28"
+compatibility_flags = ["nodejs_compat"]
+```
+
+Weitere Infos: [Cloudflare Node.js Compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/)
+
 ## Deployment
 
 Das Projekt wird auf Cloudflare Workers deployed:
