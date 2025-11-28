@@ -6,4 +6,7 @@ export default defineConfig({
   adapter: cloudflare({
     sessions: false,
   }),
+  vite: {
+    assetsInclude: ["**/.assetsignore"],
+  },
 });
