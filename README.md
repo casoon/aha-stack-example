@@ -21,9 +21,10 @@ Basierend auf dem AHA Stack Konzept: https://ahastack.dev
 
 | Technologie | Verwendung |
 |-------------|------------|
-| **Astro** | Server-Side Rendering, API-Endpoints |
+| **Astro 5** | Server-Side Rendering, API-Endpoints, Container API |
 | **HTMX** | Server-Kommunikation ohne JavaScript |
 | **Alpine.js** | Client-Side Interaktivität |
+| **Cloudflare Workers** | Serverless Deployment |
 
 ## HTMX-Patterns
 
@@ -85,7 +86,7 @@ src/
 │   └── Base.astro           # Layout mit Styles
 ├── lib/
 │   ├── db.ts                # In-Memory Datenspeicher
-│   └── render.ts            # HTML-Render Funktionen
+│   └── render.ts            # Astro Container API Rendering
 └── pages/
     ├── api/
     │   └── tasks/           # REST API Endpoints
@@ -100,6 +101,29 @@ src/
 | PUT | `/api/tasks/:id` | Aufgabe aktualisieren |
 | PATCH | `/api/tasks/:id/status` | Status ändern (Drag & Drop) |
 | DELETE | `/api/tasks/:id` | Aufgabe löschen |
+
+## Astro Container API
+
+Die API-Endpoints nutzen die experimentelle [Astro Container API](https://docs.astro.build/en/reference/container-reference/), um Astro-Komponenten serverseitig zu rendern:
+
+```typescript
+import { experimental_AstroContainer } from "astro/container";
+import KanbanBoard from "../components/KanbanBoard.astro";
+
+const container = await AstroContainer.create();
+const html = await container.renderToString(KanbanBoard, {
+  props: { tasks, stats }
+});
+```
+
+## Deployment
+
+Das Projekt wird auf Cloudflare Workers deployed:
+
+```bash
+pnpm run build
+pnpm exec wrangler deploy
+```
 
 ## Lizenz
 
