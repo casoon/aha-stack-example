@@ -4,6 +4,8 @@ Eine Demo-Anwendung, die das Zusammenspiel von **Astro**, **HTMX** und **Alpine.
 
 **Live Demo:** https://aha-stack.casoon.dev
 
+Basierend auf dem AHA Stack Konzept: https://ahastack.dev
+
 ## Features
 
 - **Kanban Board** mit drei Spalten (Offen, In Bearbeitung, Erledigt)
