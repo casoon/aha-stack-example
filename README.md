@@ -104,16 +104,41 @@ src/
 
 ## Astro Container API
 
-Die API-Endpoints nutzen die experimentelle [Astro Container API](https://docs.astro.build/en/reference/container-reference/), um Astro-Komponenten serverseitig zu rendern:
+Die API-Endpoints nutzen die experimentelle [Astro Container API](https://docs.astro.build/en/reference/container-reference/), um Astro-Komponenten serverseitig zu rendern. Dies ermöglicht es, `.astro`-Komponenten in API-Endpoints zu verwenden, anstatt HTML-Strings manuell zu erstellen.
+
+### Warum Container API?
+
+| Ansatz | Nachteil |
+|--------|----------|
+| Template-Strings | Kein Syntax-Highlighting, fehleranfällig, kein Komponenten-Reuse |
+| Partial Pages | Erfordert separate `.astro`-Dateien pro Fragment |
+| **Container API** | Volle Astro-Komponenten in API-Endpoints |
+
+### Verwendung
 
 ```typescript
-import { experimental_AstroContainer } from "astro/container";
+// src/lib/render.ts
+import { experimental_AstroContainer as AstroContainer } from "astro/container";
 import KanbanBoard from "../components/KanbanBoard.astro";
 
-const container = await AstroContainer.create();
-const html = await container.renderToString(KanbanBoard, {
-  props: { tasks, stats }
-});
+export async function renderKanbanBoard(request: Request): Promise<string> {
+  const container = await AstroContainer.create({ request });
+  return await container.renderToString(KanbanBoard, {
+    props: { tasks, stats }
+  });
+}
+```
+
+```typescript
+// src/pages/api/tasks.ts
+import { renderKanbanBoard } from "../../lib/render";
+
+export const POST: APIRoute = async ({ request }) => {
+  // ... Task erstellen
+  return new Response(await renderKanbanBoard(request), {
+    headers: { "Content-Type": "text/html" }
+  });
+};
 ```
 
 ### Container API auf Cloudflare Workers
