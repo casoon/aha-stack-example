@@ -42,14 +42,14 @@ export const PUT: APIRoute = async ({ params, request }) => {
     return new Response("Aufgabe nicht gefunden", { status: 404 });
   }
 
-  return new Response(await renderKanbanBoard(), {
+  return new Response(await renderKanbanBoard(request), {
     status: 200,
     headers: { "Content-Type": "text/html" },
   });
 };
 
 // DELETE: Aufgabe löschen
-export const DELETE: APIRoute = async ({ params }) => {
+export const DELETE: APIRoute = async ({ params, request }) => {
   const id = parseInt(params.id || "0");
   const success = deleteTask(id);
 
@@ -57,7 +57,7 @@ export const DELETE: APIRoute = async ({ params }) => {
     return new Response("Aufgabe nicht gefunden", { status: 404 });
   }
 
-  return new Response(await renderKanbanBoard(), {
+  return new Response(await renderKanbanBoard(request), {
     status: 200,
     headers: { "Content-Type": "text/html" },
   });

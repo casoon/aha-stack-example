@@ -5,21 +5,21 @@ import { experimental_AstroContainer as AstroContainer } from "astro/container";
 import { getTasksByStatus, getStats } from "./db";
 import KanbanBoard from "../components/KanbanBoard.astro";
 
-let container: AstroContainer | null = null;
+export async function renderKanbanBoard(request: Request): Promise<string> {
+  try {
+    const tasks = getTasksByStatus();
+    const stats = getStats();
 
-async function getContainer(): Promise<AstroContainer> {
-  if (!container) {
-    container = await AstroContainer.create();
+    const container = await AstroContainer.create({
+      request,
+    });
+    const html = await container.renderToString(KanbanBoard, {
+      props: { tasks, stats },
+    });
+
+    return html;
+  } catch (error) {
+    console.error("Container API Error:", error);
+    throw error;
   }
-  return container;
-}
-
-export async function renderKanbanBoard(): Promise<string> {
-  const tasks = getTasksByStatus();
-  const stats = getStats();
-
-  const astro = await getContainer();
-  return await astro.renderToString(KanbanBoard, {
-    props: { tasks, stats },
-  });
 }

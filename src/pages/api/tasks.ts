@@ -29,7 +29,7 @@ export const POST: APIRoute = async ({ request }) => {
     : "medium";
   addTask(text, validPriority);
 
-  return new Response(await renderKanbanBoard(), {
+  return new Response(await renderKanbanBoard(request), {
     status: 200,
     headers: { "Content-Type": "text/html" },
   });
