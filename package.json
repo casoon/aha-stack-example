@@ -8,8 +8,8 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/node": "^8.3.4",
-    "astro": "^4.16.0"
+    "@astrojs/cloudflare": "12.6.12",
+    "astro": "5.16.2"
   },
   "volta": {
     "node": "20.18.0"
