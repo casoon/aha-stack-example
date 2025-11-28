@@ -25,16 +25,18 @@ const stats = getStats();
       draggedId: null,
       dragStatus: null,
       newPriority: 'medium',
+      stats: { total: ${stats.total}, open: ${stats.open}, inProgress: ${stats.inProgress}, done: ${stats.done} },
 
-      get stats() {
+      updateStats() {
         const board = document.getElementById('kanban-board');
-        if (!board) return { total: ${stats.total}, open: ${stats.open}, inProgress: ${stats.inProgress}, done: ${stats.done} };
-        return {
-          total: parseInt(board.dataset.total) || 0,
-          open: parseInt(board.dataset.open) || 0,
-          inProgress: parseInt(board.dataset.inProgress) || 0,
-          done: parseInt(board.dataset.done) || 0
-        };
+        if (board) {
+          this.stats = {
+            total: parseInt(board.dataset.total) || 0,
+            open: parseInt(board.dataset.open) || 0,
+            inProgress: parseInt(board.dataset.inProgress) || 0,
+            done: parseInt(board.dataset.done) || 0
+          };
+        }
       },
 
       toggleDarkMode() {
@@ -86,7 +88,7 @@ const stats = getStats();
       document.body.addEventListener('htmx:afterRequest', () => {
         isLoading = false;
         newPriority = 'medium';
-        $nextTick(() => $dispatch('stats-updated'));
+        $nextTick(() => updateStats());
       });
     "
     >
@@ -114,7 +116,7 @@ const stats = getStats();
         </div>
 
         <!-- Statistiken -->
-        <div class="stats" @stats-updated.window="$forceUpdate()">
+        <div class="stats">
             <span class="stat">
                 <strong x-text="stats.total">{stats.total}</strong> Gesamt
             </span>
