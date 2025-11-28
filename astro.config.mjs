@@ -21,6 +21,8 @@ export default defineConfig({
             return;
           }
 
+          const siteUrl = "https://aha-stack.casoon.dev/";
+
           // Alle .js und .mjs Dateien im Worker-Verzeichnis durchsuchen
           const patchFiles = (directory) => {
             const entries = fs.readdirSync(directory, { withFileTypes: true });
@@ -33,37 +35,49 @@ export default defineConfig({
                 entry.name.endsWith(".mjs")
               ) {
                 let code = fs.readFileSync(fullPath, "utf8");
-                if (!code.includes("file:///")) continue;
+                let modified = false;
 
-                // 1) new URL("file:///...") -> new URL("https://aha-stack.casoon.dev/")
-                code = code.replace(
-                  /new URL\("file:[^"]*"\)/g,
-                  'new URL("https://aha-stack.casoon.dev/")',
-                );
+                // Container API: hrefRoot: import.meta.url -> site URL
+                if (code.includes("hrefRoot: import.meta.url")) {
+                  code = code.replace(
+                    /hrefRoot:\s*import\.meta\.url/g,
+                    `hrefRoot: "${siteUrl}"`,
+                  );
+                  modified = true;
+                }
 
-                // 2) hrefRoot: "file:///..." -> vollständige URL
-                code = code.replace(
-                  /"hrefRoot":\s*"file:\/\/\/[^"]*"/g,
-                  '"hrefRoot":"https://aha-stack.casoon.dev/"',
-                );
+                // file:/// URLs patchen
+                if (code.includes("file:///")) {
+                  // 1) new URL("file:///...") -> new URL(siteUrl)
+                  code = code.replace(
+                    /new URL\("file:[^"]*"\)/g,
+                    `new URL("${siteUrl}")`,
+                  );
 
-                // 3) Andere dir-Pfade mit file:/// -> site URL
-                code = code.replace(
-                  /"(cacheDir|outDir|srcDir|publicDir|buildClientDir|buildServerDir)":\s*"file:\/\/\/[^"]*"/g,
-                  (_, key) => `"${key}":"https://aha-stack.casoon.dev/"`,
-                );
+                  // 2) hrefRoot: "file:///..." -> site URL
+                  code = code.replace(
+                    /"hrefRoot":\s*"file:\/\/\/[^"]*"/g,
+                    `"hrefRoot":"${siteUrl}"`,
+                  );
 
-                // 4) Fallback: nackte "file:///..."-Strings durch site URL ersetzen
-                code = code.replace(
-                  /"file:\/\/\/[^"]*"/g,
-                  '"https://aha-stack.casoon.dev/"',
-                );
+                  // 3) Andere dir-Pfade mit file:/// -> site URL
+                  code = code.replace(
+                    /"(cacheDir|outDir|srcDir|publicDir|buildClientDir|buildServerDir)":\s*"file:\/\/\/[^"]*"/g,
+                    (_, key) => `"${key}":"${siteUrl}"`,
+                  );
 
-                fs.writeFileSync(fullPath, code, "utf8");
-                console.log(
-                  "[patch-container] Gepatcht:",
-                  path.relative(dir.pathname, fullPath),
-                );
+                  // 4) Fallback: nackte "file:///..."-Strings durch site URL ersetzen
+                  code = code.replace(/"file:\/\/\/[^"]*"/g, `"${siteUrl}"`);
+                  modified = true;
+                }
+
+                if (modified) {
+                  fs.writeFileSync(fullPath, code, "utf8");
+                  console.log(
+                    "[patch-container] Gepatcht:",
+                    path.relative(dir.pathname, fullPath),
+                  );
+                }
               }
             }
           };

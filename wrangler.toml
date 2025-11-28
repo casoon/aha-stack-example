@@ -1,7 +1,7 @@
 name = "aha-stack-example"
 main = "./dist/_worker.js/index.js"
 compatibility_date = "2025-11-28"
-compatibility_flags = ["nodejs_compat_v2"]
+compatibility_flags = ["nodejs_compat"]
 
 routes = [
   { pattern = "aha-stack.casoon.dev", custom_domain = true }
