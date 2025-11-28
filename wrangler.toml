@@ -1,5 +1,7 @@
 name = "aha-stack-example"
+main = "./dist/_worker.js"
 compatibility_date = "2024-11-28"
 
 [assets]
 directory = "./dist"
+binding = "ASSETS"
