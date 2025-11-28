@@ -7,8 +7,8 @@ import {
   validateTask,
   isValidPriority,
   type TaskPriority,
-} from "../../lib/db";
-import { renderKanbanBoard } from "../../lib/render";
+} from "@lib/db";
+import { renderKanbanBoard } from "@lib/render";
 
 // POST: Neue Aufgabe erstellen
 export const POST: APIRoute = async ({ request }) => {

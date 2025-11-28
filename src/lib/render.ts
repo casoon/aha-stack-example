@@ -2,8 +2,8 @@
 // Nutzt Astro Container API (experimental) für echte Komponenten-Rendering
 
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
-import { getTasksByStatus, getStats } from "./db";
-import KanbanBoard from "../components/KanbanBoard.astro";
+import { getTasksByStatus, getStats } from "@lib/db";
+import KanbanBoard from "@components/KanbanBoard.astro";
 
 export async function renderKanbanBoard(request: Request): Promise<string> {
   try {

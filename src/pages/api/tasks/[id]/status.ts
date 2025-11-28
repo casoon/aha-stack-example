@@ -2,8 +2,8 @@
 // PATCH /api/tasks/:id/status
 
 import type { APIRoute } from "astro";
-import { updateTaskStatus, isValidStatus } from "../../../../lib/db";
-import { renderKanbanBoard } from "../../../../lib/render";
+import { updateTaskStatus, isValidStatus } from "@lib/db";
+import { renderKanbanBoard } from "@lib/render";
 
 export const PATCH: APIRoute = async ({ params, request }) => {
   const id = parseInt(params.id || "0");

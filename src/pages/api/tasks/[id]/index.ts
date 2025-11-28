@@ -9,8 +9,8 @@ import {
   validateTask,
   isValidPriority,
   type TaskPriority,
-} from "../../../../lib/db";
-import { renderKanbanBoard } from "../../../../lib/render";
+} from "@lib/db";
+import { renderKanbanBoard } from "@lib/render";
 
 // PUT: Aufgabe aktualisieren
 export const PUT: APIRoute = async ({ params, request }) => {

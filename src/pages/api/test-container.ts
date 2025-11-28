@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { experimental_AstroContainer } from "astro/container";
-import Hello from "../../components/Hello.astro";
+import Hello from "@components/Hello.astro";
 
 export const GET: APIRoute = async ({ request }) => {
   console.log("Test Container - request.url:", request.url);

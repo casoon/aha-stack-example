@@ -2,8 +2,8 @@
 // Kanban Board Komponente
 // Zeigt Aufgaben in drei Spalten: Offen, In Bearbeitung, Erledigt
 
-import type { Task, TaskStatus } from '../lib/db';
-import { getPriorityLabel, getPriorityColor } from '../lib/db';
+import type { Task, TaskStatus } from '@lib/db';
+import { getPriorityLabel, getPriorityColor } from '@lib/db';
 
 interface Props {
   tasks: Record<TaskStatus, Task[]>;

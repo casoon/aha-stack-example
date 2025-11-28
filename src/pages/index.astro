@@ -2,9 +2,9 @@
 // Startseite mit Kanban-Board
 // Demonstriert HTMX + Alpine.js Zusammenspiel
 
-import Base from "../layouts/Base.astro";
-import KanbanBoard from "../components/KanbanBoard.astro";
-import { getTasksByStatus, getStats } from "../lib/db";
+import Base from "@layouts/Base.astro";
+import KanbanBoard from "@components/KanbanBoard.astro";
+import { getTasksByStatus, getStats } from "@lib/db";
 
 const tasks = getTasksByStatus();
 const stats = getStats();
